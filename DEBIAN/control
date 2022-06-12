@@ -1,0 +1,9 @@
+Package: android-commandline-tool
+Version: 1.0
+Section: custom
+Priority: optional
+Architecture: all
+Essential: yes
+Installed-Size: 1024
+Maintainer: abc@company.com
+Description: Print adroid-sdk on the screen
