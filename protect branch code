@@ -1,0 +1,35 @@
+#!/bin/bash
+main() {
+project_id=( $(curl -s --header "PRIVATE-TOKEN: glpat-YBsK5nJ8cKG3vTwv1DCH" "https://gitlab.com/api/v4/projects?owned=true"| jq -r .[].id) )
+#curl --header "PRIVATE-TOKEN: glpat-YBsK5nJ8cKG3vTwv1DCH" "https://gitlab.com/api/v4/projects?owned=true" | jq -r .[].id |while  read line ;do  project_id+=('$line') echo "[${#project_id[@]}]";done
+for i in "${project_id[@]}"
+do
+        branch1=( $( curl -sS --header "PRIVATE-TOKEN: glpat-YBsK5nJ8cKG3vTwv1DCH" "https://gitlab.com/api/v4/projects/$i/protected_branches" | jq -r ".[]" | jq -r ".name") )
+        for  branch in "${branch1[@]}"
+        do
+Allowed_to_push=curl -s --header "PRIVATE-TOKEN: glpat-YBsK5nJ8cKG3vTwv1DCH" "https://gitlab.com/api/v4/projects/$i/protected_branches/"$branch""| jq -r .push_access_levels |grep -o '"access_level_description": *"[^"]*"' | grep -o '"[^"]*"$'
+Allowed_to_Merge=curl -s --header "PRIVATE-TOKEN: glpat-YBsK5nJ8cKG3vTwv1DCH" "https://gitlab.com/api/v4/projects/$i/protected_branches/"$branch""| jq -r .merge_access_levels |grep -o '"access_level_description": *"[^"]*"' | grep -o '"[^"]*"$'
+Allow_to_force_push=curl -s --header "PRIVATE-TOKEN: glpat-YBsK5nJ8cKG3vTwv1DCH" "https://gitlab.com/api/v4/projects/$i/protected_branches/"$branch""| jq -r .allow_force_push
+echo  -e "$branch,\t\t$i\t\t$Allowed_to_push,\t\t$Allowed_to_Merge,\t\t$Allow_to_force_push" >> input.json
+        done
+echo -e "Branch,\t\tProject_id,\t\tAllowed_to_push,\t\tAllowed_to_Merge,\t\tAllow_to_force_push" | cat - input.json > output.csv
+done
+>input.json
+}
+count(){
+  spin &
+  pid=$!
+  echo -n "Extracting Data"
+  main
+   kill $pid; echo ''
+}
+
+spin(){
+  while [ 1 ]
+  do
+          echo -ne ".";
+      sleep 0.2;
+
+  done
+}
+count
